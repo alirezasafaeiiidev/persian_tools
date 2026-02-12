@@ -6,6 +6,12 @@ import SavedFinanceCalculations from '@/components/features/finance/SavedFinance
 import { formatMoneyFa, parseLooseNumber } from '@/shared/utils/numbers';
 import { saveFinanceCalculation } from '@/shared/analytics/financeSaved';
 import { getSessionJson, setSessionJson } from '@/shared/storage/sessionStorage';
+import { V3_FEATURE_FLAGS } from '@/shared/monetization/featureFlags';
+import {
+  enableProLocalUnlock,
+  isProEnabled,
+  onProAccessUpdate,
+} from '@/shared/monetization/proAccess';
 import { calculateLoanResult } from '@/features/loan/loan.logic';
 import type { LoanResult, LoanType, CalculationType } from '@/features/loan/loan.types';
 import {
@@ -53,6 +59,7 @@ export default function LoanPage() {
   const [result, setResult] = useState<LoanResult | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [proEnabled, setProEnabled] = useState<boolean>(() => isProEnabled());
   const initialRef = useMemo(() => JSON.stringify(initial), [initial]);
 
   useEffect(() => {
@@ -73,6 +80,12 @@ export default function LoanPage() {
       setShowAdvanced(true);
     }
   }, [form.loanType]);
+
+  useEffect(() => {
+    return onProAccessUpdate(() => {
+      setProEnabled(isProEnabled());
+    });
+  }, []);
 
   function onCalculate() {
     setError(null);
@@ -128,6 +141,44 @@ export default function LoanPage() {
       )} تومان`,
     });
     showToast('نتیجه وام در مرورگر ذخیره شد', 'success');
+  };
+
+  const onEnablePro = () => {
+    enableProLocalUnlock();
+    setProEnabled(true);
+    showToast('حالت Pro محلی فعال شد', 'success');
+  };
+
+  const onExportLoanCsv = () => {
+    if (!result) {
+      return;
+    }
+    if (!proEnabled) {
+      showToast('برای خروجی CSV ابتدا Pro را فعال کنید', 'error');
+      return;
+    }
+
+    const rows: Array<[string, string | number]> = [
+      ['نوع وام', getLoanTypeLabel(form.loanType)],
+      ['نوع محاسبه', getCalculationTypeLabel(form.calculationType)],
+      ['قسط ماهانه (تومان)', Math.round(result.monthlyPayment)],
+      ['مبلغ کل بازپرداخت (تومان)', Math.round(result.totalPayment)],
+      ['سود کل (تومان)', Math.round(result.totalInterest)],
+      ['تعداد اقساط (ماه)', result.months],
+    ];
+    const csv = [
+      ['field', 'value'].join(','),
+      ...rows.map(([label, value]) => `"${label}","${String(value)}"`),
+    ].join('\n');
+
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const href = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = href;
+    anchor.download = `loan-result-${Date.now()}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(href);
+    showToast('خروجی CSV دانلود شد', 'success');
   };
 
   const getCalculationTypeLabel = (type: CalculationType) => {
@@ -700,14 +751,41 @@ export default function LoanPage() {
                       </div>
                       نتیجه محاسبه - وام {getLoanTypeLabel(form.loanType)}
                     </h2>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-md"
-                      onClick={onSaveCalculation}
-                    >
-                      ذخیره محاسبه
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-md"
+                        onClick={onSaveCalculation}
+                      >
+                        ذخیره محاسبه
+                      </button>
+                      {V3_FEATURE_FLAGS.proFinanceEnhancements ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-md"
+                          onClick={onExportLoanCsv}
+                        >
+                          خروجی CSV (Pro)
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
+
+                  {V3_FEATURE_FLAGS.proFinanceEnhancements && !proEnabled ? (
+                    <div className="mb-6 rounded-[var(--radius-md)] border border-[rgb(var(--color-warning-rgb)/0.4)] bg-[rgb(var(--color-warning-rgb)/0.14)] px-4 py-3 text-sm text-[var(--text-primary)]">
+                      <p className="font-semibold">قابلیت Pro محلی برای خروجی CSV غیرفعال است.</p>
+                      <p className="mt-1 text-[var(--text-secondary)]">
+                        با مدل honor-based می‌توانید Pro را روی همین مرورگر فعال کنید.
+                      </p>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm mt-3"
+                        onClick={onEnablePro}
+                      >
+                        فعال‌سازی Pro محلی
+                      </button>
+                    </div>
+                  ) : null}
 
                   <StaggerContainer staggerDelay={0.1}>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

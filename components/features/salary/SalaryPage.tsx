@@ -5,6 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SavedFinanceCalculations from '@/components/features/finance/SavedFinanceCalculations';
 import { formatMoneyFa, parseLooseNumber } from '@/shared/utils/numbers';
 import { saveFinanceCalculation } from '@/shared/analytics/financeSaved';
+import { V3_FEATURE_FLAGS } from '@/shared/monetization/featureFlags';
+import {
+  enableProLocalUnlock,
+  isProEnabled,
+  onProAccessUpdate,
+} from '@/shared/monetization/proAccess';
 import { getSessionJson, setSessionJson } from '@/shared/storage/sessionStorage';
 import {
   calculateSalary,
@@ -79,6 +85,7 @@ export default function SalaryPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [proEnabled, setProEnabled] = useState<boolean>(() => isProEnabled());
   const initialRef = useMemo(() => JSON.stringify(initial), [initial]);
 
   const advancedSummary = [
@@ -131,6 +138,63 @@ export default function SalaryPage() {
     showToast('نتیجه حداقل دستمزد در مرورگر ذخیره شد', 'success');
   };
 
+  const onEnablePro = () => {
+    enableProLocalUnlock();
+    setProEnabled(true);
+    showToast('حالت Pro محلی فعال شد', 'success');
+  };
+
+  const downloadCsv = (fileBaseName: string, rows: Array<[string, string | number]>) => {
+    const csv = [
+      ['field', 'value'].join(','),
+      ...rows.map(([label, value]) => `"${label}","${String(value)}"`),
+    ].join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const href = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = href;
+    anchor.download = `${fileBaseName}-${Date.now()}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(href);
+    showToast('خروجی CSV دانلود شد', 'success');
+  };
+
+  const exportSalaryCsv = () => {
+    if (!result) {
+      return;
+    }
+    if (!proEnabled) {
+      showToast('برای خروجی CSV ابتدا Pro را فعال کنید', 'error');
+      return;
+    }
+    downloadCsv('salary-result', [
+      ['حالت محاسبه', form.mode],
+      ['حقوق ناخالص (تومان)', Math.round(result.grossSalary)],
+      ['مجموع کسورات (تومان)', Math.round(result.summary.totalDeductions)],
+      ['حقوق خالص (تومان)', Math.round(result.netSalary)],
+      ['مالیات (تومان)', Math.round(result.summary.tax)],
+      ['بیمه سهم کارمند (تومان)', Math.round(result.summary.insurance)],
+    ]);
+  };
+
+  const exportMinimumWageCsv = () => {
+    if (!minimumWageResult) {
+      return;
+    }
+    if (!proEnabled) {
+      showToast('برای خروجی CSV ابتدا Pro را فعال کنید', 'error');
+      return;
+    }
+    downloadCsv('minimum-wage-result', [
+      ['حقوق پایه (تومان)', Math.round(minimumWageResult.baseSalary)],
+      ['کمک هزینه مسکن (تومان)', Math.round(minimumWageResult.housingAllowance)],
+      ['کمک هزینه غذا (تومان)', Math.round(minimumWageResult.foodAllowance)],
+      ['حق اولاد (تومان)', Math.round(minimumWageResult.familyAllowance)],
+      ['مجموع ناخالص (تومان)', Math.round(minimumWageResult.totalGross)],
+      ['خالص دریافتی (تومان)', Math.round(minimumWageResult.netSalary)],
+    ]);
+  };
+
   useEffect(() => {
     setSessionJson(sessionKey, form);
   }, [form]);
@@ -143,6 +207,12 @@ export default function SalaryPage() {
       setHasInteracted(true);
     }
   }, [form, hasInteracted, initialRef]);
+
+  useEffect(() => {
+    return onProAccessUpdate(() => {
+      setProEnabled(isProEnabled());
+    });
+  }, []);
 
   const onCalculate = useCallback(() => {
     setError(null);
@@ -630,13 +700,36 @@ export default function SalaryPage() {
                       {showDetails ? 'مخفی کردن جزئیات' : 'نمایش جزئیات'}
                     </motion.button>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-md mb-5"
-                    onClick={saveSalaryResult}
-                  >
-                    ذخیره محاسبه
-                  </button>
+                  <div className="mb-5 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-md"
+                      onClick={saveSalaryResult}
+                    >
+                      ذخیره محاسبه
+                    </button>
+                    {V3_FEATURE_FLAGS.proFinanceEnhancements ? (
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-md"
+                        onClick={exportSalaryCsv}
+                      >
+                        خروجی CSV (Pro)
+                      </button>
+                    ) : null}
+                  </div>
+                  {V3_FEATURE_FLAGS.proFinanceEnhancements && !proEnabled ? (
+                    <div className="mb-5 rounded-[var(--radius-md)] border border-[rgb(var(--color-warning-rgb)/0.4)] bg-[rgb(var(--color-warning-rgb)/0.14)] px-4 py-3 text-sm text-[var(--text-primary)]">
+                      <p className="font-semibold">قابلیت خروجی CSV در حالت Pro فعال می‌شود.</p>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm mt-3"
+                        onClick={onEnablePro}
+                      >
+                        فعال‌سازی Pro محلی
+                      </button>
+                    </div>
+                  ) : null}
 
                   <div className="grid gap-6 md:grid-cols-3">
                     <motion.div
@@ -781,13 +874,24 @@ export default function SalaryPage() {
                       </div>
                       نتیجه محاسبه حداقل دستمزد
                     </h2>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-md"
-                      onClick={saveMinimumWageResult}
-                    >
-                      ذخیره محاسبه
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-md"
+                        onClick={saveMinimumWageResult}
+                      >
+                        ذخیره محاسبه
+                      </button>
+                      {V3_FEATURE_FLAGS.proFinanceEnhancements ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-md"
+                          onClick={exportMinimumWageCsv}
+                        >
+                          خروجی CSV (Pro)
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
 
                   <div className="grid gap-6 md:grid-cols-2">
