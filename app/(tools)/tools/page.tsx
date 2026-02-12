@@ -1,3 +1,4 @@
+import RelatedFinanceTools from '@/components/features/finance/RelatedFinanceTools';
 import ToolsDashboardPage from '@/components/features/tools-dashboard/ToolsDashboardPage';
 import ToolSeoContent from '@/components/seo/ToolSeoContent';
 import { buildMetadata } from '@/lib/seo';
@@ -17,6 +18,7 @@ export default function ToolsDashboardRoute() {
   return (
     <div className="space-y-10">
       <ToolsDashboardPage />
+      <RelatedFinanceTools current="hub" />
       {categoryContent && (
         <section className="space-y-6">
           <h2 className="text-2xl font-bold text-[var(--text-primary)]">راهنمای موضوعی مالی</h2>

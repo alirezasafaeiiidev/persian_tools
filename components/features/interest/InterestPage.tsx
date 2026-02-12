@@ -1,7 +1,9 @@
 'use client';
 
+import SavedFinanceCalculations from '@/components/features/finance/SavedFinanceCalculations';
 import { useMemo, useState } from 'react';
 import { calculateInterestResult, type InterestMode } from '@/features/interest/interest.logic';
+import { saveFinanceCalculation } from '@/shared/analytics/financeSaved';
 import { formatMoneyFa, parseLooseNumber } from '@/shared/utils/numbers';
 
 type InterestFormState = {
@@ -33,6 +35,19 @@ export default function InterestPage() {
 
   const error = calculation.ok ? null : calculation.error.message;
   const result = calculation.ok ? calculation.data : null;
+
+  const handleSave = () => {
+    if (!result) {
+      return;
+    }
+    saveFinanceCalculation({
+      tool: 'interest',
+      title: 'سناریوی سود سپرده',
+      summary: `سود کل: ${formatMoneyFa(result.interest)} تومان | مبلغ نهایی: ${formatMoneyFa(
+        result.finalAmount,
+      )} تومان`,
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -114,27 +129,33 @@ export default function InterestPage() {
       ) : null}
 
       {result ? (
-        <section className="grid gap-4 md:grid-cols-3">
-          <article className="rounded-[var(--radius-lg)] border border-[var(--border-light)] bg-[var(--surface-1)] p-5">
-            <h2 className="text-sm font-semibold text-[var(--text-muted)]">سود کل</h2>
-            <p className="mt-3 text-2xl font-black text-[var(--text-primary)]">
-              {formatMoneyFa(result.interest)} تومان
-            </p>
-          </article>
-          <article className="rounded-[var(--radius-lg)] border border-[var(--border-light)] bg-[var(--surface-1)] p-5">
-            <h2 className="text-sm font-semibold text-[var(--text-muted)]">مبلغ نهایی</h2>
-            <p className="mt-3 text-2xl font-black text-[var(--text-primary)]">
-              {formatMoneyFa(result.finalAmount)} تومان
-            </p>
-          </article>
-          <article className="rounded-[var(--radius-lg)] border border-[var(--border-light)] bg-[var(--surface-1)] p-5">
-            <h2 className="text-sm font-semibold text-[var(--text-muted)]">سود ماهانه تقریبی</h2>
-            <p className="mt-3 text-2xl font-black text-[var(--text-primary)]">
-              {formatMoneyFa(result.monthlyProfit)} تومان
-            </p>
-          </article>
+        <section className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <article className="rounded-[var(--radius-lg)] border border-[var(--border-light)] bg-[var(--surface-1)] p-5">
+              <h2 className="text-sm font-semibold text-[var(--text-muted)]">سود کل</h2>
+              <p className="mt-3 text-2xl font-black text-[var(--text-primary)]">
+                {formatMoneyFa(result.interest)} تومان
+              </p>
+            </article>
+            <article className="rounded-[var(--radius-lg)] border border-[var(--border-light)] bg-[var(--surface-1)] p-5">
+              <h2 className="text-sm font-semibold text-[var(--text-muted)]">مبلغ نهایی</h2>
+              <p className="mt-3 text-2xl font-black text-[var(--text-primary)]">
+                {formatMoneyFa(result.finalAmount)} تومان
+              </p>
+            </article>
+            <article className="rounded-[var(--radius-lg)] border border-[var(--border-light)] bg-[var(--surface-1)] p-5">
+              <h2 className="text-sm font-semibold text-[var(--text-muted)]">سود ماهانه تقریبی</h2>
+              <p className="mt-3 text-2xl font-black text-[var(--text-primary)]">
+                {formatMoneyFa(result.monthlyProfit)} تومان
+              </p>
+            </article>
+          </div>
+          <button type="button" className="btn btn-primary btn-md" onClick={handleSave}>
+            ذخیره محاسبه در مرورگر
+          </button>
         </section>
       ) : null}
+      <SavedFinanceCalculations tool="interest" />
     </div>
   );
 }
