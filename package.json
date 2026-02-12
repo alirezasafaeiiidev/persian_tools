@@ -219,10 +219,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/alirezasafaeiiidev/persiantoolbox.git"
+    "url": "https://github.com/alirezasafaeiiidev/persian_tools.git"
   },
   "bugs": {
-    "url": "https://github.com/alirezasafaeiiidev/persiantoolbox/issues"
+    "url": "https://github.com/alirezasafaeiiidev/persian_tools/issues"
   },
   "homepage": "https://persiantoolbox.ir",
   "pnpm": {
