@@ -1,7 +1,13 @@
 # Remaining Execution Tasks - asdev-persiantoolbox
 
-- Last updated: 2026-02-14
+- Last updated: 2026-02-14 (2026-02-14 20:22:46 UTC)
 - Scope: development environment only (no server-side changes)
+
+## Local Save Log
+
+- `8ef6acb` - chore(execution): finalize dev execution docs and remaining roadmap
+- `b99c4a6` - docs(release): mark rc and launch smoke as done in readiness dashboard
+- `bb25e59` - docs(execution): clarify remaining release-tag dependency
 
 ## Current State
 
