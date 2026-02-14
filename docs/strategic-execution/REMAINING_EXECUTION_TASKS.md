@@ -13,7 +13,7 @@
 1. Finalize remote release tag state
 
 - Status: pending external action
-- Why remaining: `docs/release/release-state-registry.md` and `docs/release/v3-readiness-dashboard.md` are still `in_progress`.
+- Why remaining: `docs/release/release-state-registry.md` and `final_release_tag_remote` in `docs/release/v3-readiness-dashboard.md` are still `in_progress`.
 - Evidence path: `docs/release/reports/v3-publish-tasklist-2026-02-14.md`
 - Required action: after final approval, create/publish final release tag on remote and update status to `done`.
 
