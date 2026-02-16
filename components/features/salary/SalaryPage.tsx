@@ -22,6 +22,13 @@ import { useToast } from '@/shared/ui/toast-context';
 import AsyncState from '@/shared/ui/AsyncState';
 
 type CalculationMode = 'gross-to-net' | 'net-to-gross' | 'minimum-wage';
+type SalaryLawsFeed = {
+  version: string;
+  updatedAt: string;
+  source: string;
+  region: string;
+  years: Record<string, unknown>;
+};
 
 type SalaryFormState = {
   mode: CalculationMode;
@@ -78,6 +85,10 @@ export default function SalaryPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SalaryOutput | null>(null);
   const [minimumWageResult, setMinimumWageResult] = useState<MinimumWageOutput | null>(null);
+  const [lawsFeed, setLawsFeed] = useState<SalaryLawsFeed | null>(null);
+  const [lawsFeedStatus, setLawsFeedStatus] = useState<'loading' | 'ready' | 'stale' | 'disabled'>(
+    'loading',
+  );
   const [showDetails, setShowDetails] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -234,6 +245,43 @@ export default function SalaryPage() {
     onCalculate();
   }, [onCalculate]);
 
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+
+    const loadLawsFeed = async () => {
+      try {
+        const response = await fetch('/api/data/salary-laws', {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error('salary-laws feed unavailable');
+        }
+        const payload = (await response.json()) as SalaryLawsFeed;
+        if (!active) {
+          return;
+        }
+        setLawsFeed(payload);
+        const updated = new Date(payload.updatedAt);
+        const ageMs = Date.now() - updated.getTime();
+        const maxFreshMs = 1000 * 60 * 60 * 24 * 90;
+        setLawsFeedStatus(Number.isFinite(ageMs) && ageMs > maxFreshMs ? 'stale' : 'ready');
+      } catch {
+        if (!active) {
+          return;
+        }
+        setLawsFeedStatus('disabled');
+      }
+    };
+
+    loadLawsFeed();
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, []);
+
   return (
     <div className="min-h-screen">
       <div className="space-y-8 p-6">
@@ -265,6 +313,28 @@ export default function SalaryPage() {
             <div className="mt-4 text-sm text-[var(--text-muted)]">
               حداقل دستمزد: {formatMoneyFa(laws.minimumWage)} تومان | معافیت مالیات:{' '}
               {formatMoneyFa(laws.taxExemption)} تومان ماهانه
+            </div>
+            <div className="mt-3">
+              {lawsFeedStatus === 'loading' && (
+                <div className="inline-flex items-center rounded-full border border-[var(--border-light)] bg-[var(--surface-1)] px-3 py-1 text-xs text-[var(--text-secondary)]">
+                  در حال بررسی نسخه قوانین حقوق...
+                </div>
+              )}
+              {lawsFeedStatus === 'ready' && lawsFeed && (
+                <div className="inline-flex items-center rounded-full border border-[rgb(var(--color-success-rgb)/0.3)] bg-[rgb(var(--color-success-rgb)/0.12)] px-3 py-1 text-xs text-[var(--color-success)]">
+                  آخرین بروزرسانی قوانین: {lawsFeed.updatedAt} | {lawsFeed.version}
+                </div>
+              )}
+              {lawsFeedStatus === 'stale' && lawsFeed && (
+                <div className="inline-flex items-center rounded-full border border-[rgb(var(--color-warning-rgb)/0.35)] bg-[rgb(var(--color-warning-rgb)/0.14)] px-3 py-1 text-xs text-[var(--color-warning)]">
+                  هشدار: داده قوانین قدیمی است ({lawsFeed.updatedAt}) و نیاز به بازبینی دارد.
+                </div>
+              )}
+              {lawsFeedStatus === 'disabled' && (
+                <div className="inline-flex items-center rounded-full border border-[rgb(var(--color-danger-rgb)/0.35)] bg-[rgb(var(--color-danger-rgb)/0.12)] px-3 py-1 text-xs text-[var(--color-danger)]">
+                  سرویس قوانین داخلی موقتا در دسترس نیست. محاسبه با قوانین نسخه محلی انجام می‌شود.
+                </div>
+              )}
             </div>
           </div>
         </FadeIn>
