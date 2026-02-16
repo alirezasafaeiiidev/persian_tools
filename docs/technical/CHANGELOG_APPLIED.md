@@ -2,6 +2,8 @@
 
 Date: 2026-02-16
 
+Documentation refresh: 2026-02-16 (README + technical and release status docs synchronized).
+
 ## Phase Status
 - Phase 0 (Baseline): Done
 - Phase 1 (UX Inputs): Done

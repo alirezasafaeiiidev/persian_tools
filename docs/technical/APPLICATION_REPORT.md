@@ -3,6 +3,21 @@
 Date: 2026-02-16
 Scope: Corrective/development track only (no full payment/subscription implementation)
 
+## 0) Execution Update (Post-Implementation)
+
+Implementation status on 2026-02-16:
+- Phase 0: Done
+- Phase 1: Done
+- Phase 2: Done (WOFF2 migration left as operational TODO)
+- Phase 3: Done
+- Phase 4: Done
+- Phase 7: Done
+
+Implemented evidence pointers:
+- Applied changelog: `docs/technical/CHANGELOG_APPLIED.md`
+- ADR decisions: `docs/technical/adr/ADR-0001-tool-tier-and-pro-network-policy.md`
+- Manual smoke guide: `docs/technical/smoke-tests.md`
+
 ## 1) Current-State Assessment
 
 ### Local-First
@@ -177,4 +192,3 @@ DoD:
 6. `feat(correctness): golden test scaffold and salary datahub contract endpoint`
 7. `feat(pwa): add /pro placeholder and network-only sw policy for pro routes`
 8. `docs(technical): add smoke tests + applied changelog summary`
-
