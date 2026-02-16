@@ -26,6 +26,9 @@ docs/api/
 .setting/
 .mcp-logs/
 
+# Codex snapshots (local evidence, not committed)
+.codex/snapshots/
+
 # Lighthouse reports (keep local only)
 /reports/lighthouse/
 .lighthouseci/

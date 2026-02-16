@@ -27,8 +27,9 @@ export const SITE_SETTINGS_ENV_KEYS = {
 } as const;
 
 export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
-  developerName: 'تیم جعبه ابزار فارسی',
-  developerBrandText: 'طراحی و نگهداری این سرویس توسط تیم جعبه ابزار فارسی انجام می‌شود.',
+  developerName: 'علیرضا صفایی',
+  developerBrandText:
+    'ASDEV | Alireza Safaei — Production-Grade Web Systems Engineer | Architecture • Scalability • Reliability',
   orderUrl: null,
   portfolioUrl: null,
 };
