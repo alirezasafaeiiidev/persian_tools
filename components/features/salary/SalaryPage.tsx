@@ -15,6 +15,8 @@ import {
 import type { SalaryInput, SalaryOutput, MinimumWageOutput } from '@/features/salary/salary.types';
 import { AnimatedCard, FadeIn } from '@/shared/ui/AnimatedComponents';
 import Button from '@/shared/ui/Button';
+import MoneyInput from '@/shared/ui/MoneyInput';
+import NumericInput from '@/shared/ui/NumericInput';
 import { tokens, toolCategories } from '@/shared/constants/tokens';
 import { useToast } from '@/shared/ui/toast-context';
 import AsyncState from '@/shared/ui/AsyncState';
@@ -221,6 +223,12 @@ export default function SalaryPage() {
   }, [form]);
 
   const laws = getSalaryLaws();
+  const getFieldError = (label: string, value: string) => {
+    if (!value.trim()) {
+      return undefined;
+    }
+    return parseLooseNumber(value) === null ? `${label} باید عدد معتبر باشد.` : undefined;
+  };
 
   useEffect(() => {
     onCalculate();
@@ -320,156 +328,80 @@ export default function SalaryPage() {
               {form.mode !== 'minimum-wage' && (
                 <div className="grid gap-4 md:grid-cols-2">
                   {form.mode === 'gross-to-net' && (
-                    <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="salary-base"
-                        className="text-sm font-semibold text-[var(--text-primary)]"
-                      >
-                        حقوق پایه (تومان)
-                      </label>
-                      <input
-                        id="salary-base"
-                        type="text"
-                        value={form.baseSalaryText}
-                        onChange={(e) => setForm((s) => ({ ...s, baseSalaryText: e.target.value }))}
-                        className="input-field"
-                      />
-                    </div>
+                    <MoneyInput
+                      id="salary-base"
+                      label="حقوق پایه (تومان)"
+                      value={form.baseSalaryText}
+                      onValueChange={(value) => setForm((s) => ({ ...s, baseSalaryText: value }))}
+                      error={getFieldError('حقوق پایه', form.baseSalaryText)}
+                    />
                   )}
                   {form.mode === 'net-to-gross' && (
-                    <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="salary-net"
-                        className="text-sm font-semibold text-[var(--text-primary)]"
-                      >
-                        حقوق خالص (تومان)
-                      </label>
-                      <input
-                        id="salary-net"
-                        type="text"
-                        value={form.netSalaryText}
-                        onChange={(e) => setForm((s) => ({ ...s, netSalaryText: e.target.value }))}
-                        className="input-field"
-                      />
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="salary-working-days"
-                      className="text-sm font-semibold text-[var(--text-primary)]"
-                    >
-                      روزهای کاری
-                    </label>
-                    <input
-                      id="salary-working-days"
-                      type="text"
-                      value={form.workingDaysText}
-                      onChange={(e) => setForm((s) => ({ ...s, workingDaysText: e.target.value }))}
-                      className="input-field"
+                    <MoneyInput
+                      id="salary-net"
+                      label="حقوق خالص (تومان)"
+                      value={form.netSalaryText}
+                      onValueChange={(value) => setForm((s) => ({ ...s, netSalaryText: value }))}
+                      error={getFieldError('حقوق خالص', form.netSalaryText)}
                     />
-                  </div>
+                  )}
+                  <NumericInput
+                    id="salary-working-days"
+                    label="روزهای کاری"
+                    value={form.workingDaysText}
+                    onValueChange={(value) => setForm((s) => ({ ...s, workingDaysText: value }))}
+                    error={getFieldError('روزهای کاری', form.workingDaysText)}
+                  />
                 </div>
               )}
 
               <div className="grid gap-4 md:grid-cols-3">
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="salary-experience"
-                    className="text-sm font-semibold text-[var(--text-primary)]"
-                  >
-                    سابقه کار (سال)
-                  </label>
-                  <input
-                    id="salary-experience"
-                    type="text"
-                    value={form.workExperienceYearsText}
-                    onChange={(e) =>
-                      setForm((s) => ({ ...s, workExperienceYearsText: e.target.value }))
-                    }
-                    className="input-field"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="salary-overtime"
-                    className="text-sm font-semibold text-[var(--text-primary)]"
-                  >
-                    ساعات اضافه کاری
-                  </label>
-                  <input
-                    id="salary-overtime"
-                    type="text"
-                    value={form.overtimeHoursText}
-                    onChange={(e) => setForm((s) => ({ ...s, overtimeHoursText: e.target.value }))}
-                    className="input-field"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="salary-night-overtime"
-                    className="text-sm font-semibold text-[var(--text-primary)]"
-                  >
-                    اضافه کاری شب
-                  </label>
-                  <input
-                    id="salary-night-overtime"
-                    type="text"
-                    value={form.nightOvertimeHoursText}
-                    onChange={(e) =>
-                      setForm((s) => ({ ...s, nightOvertimeHoursText: e.target.value }))
-                    }
-                    className="input-field"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="salary-holiday-overtime"
-                    className="text-sm font-semibold text-[var(--text-primary)]"
-                  >
-                    اضافه کاری تعطیل
-                  </label>
-                  <input
-                    id="salary-holiday-overtime"
-                    type="text"
-                    value={form.holidayOvertimeHoursText}
-                    onChange={(e) =>
-                      setForm((s) => ({ ...s, holidayOvertimeHoursText: e.target.value }))
-                    }
-                    className="input-field"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="salary-mission-days"
-                    className="text-sm font-semibold text-[var(--text-primary)]"
-                  >
-                    روزهای ماموریت
-                  </label>
-                  <input
-                    id="salary-mission-days"
-                    type="text"
-                    value={form.missionDaysText}
-                    onChange={(e) => setForm((s) => ({ ...s, missionDaysText: e.target.value }))}
-                    className="input-field"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="salary-children"
-                    className="text-sm font-semibold text-[var(--text-primary)]"
-                  >
-                    تعداد فرزند
-                  </label>
-                  <input
-                    id="salary-children"
-                    type="text"
-                    value={form.numberOfChildrenText}
-                    onChange={(e) =>
-                      setForm((s) => ({ ...s, numberOfChildrenText: e.target.value }))
-                    }
-                    className="input-field"
-                  />
-                </div>
+                <NumericInput
+                  id="salary-experience"
+                  label="سابقه کار (سال)"
+                  value={form.workExperienceYearsText}
+                  onValueChange={(value) => setForm((s) => ({ ...s, workExperienceYearsText: value }))}
+                  error={getFieldError('سابقه کار', form.workExperienceYearsText)}
+                />
+                <NumericInput
+                  id="salary-overtime"
+                  label="ساعات اضافه کاری"
+                  value={form.overtimeHoursText}
+                  onValueChange={(value) => setForm((s) => ({ ...s, overtimeHoursText: value }))}
+                  error={getFieldError('ساعات اضافه کاری', form.overtimeHoursText)}
+                />
+                <NumericInput
+                  id="salary-night-overtime"
+                  label="اضافه کاری شب"
+                  value={form.nightOvertimeHoursText}
+                  onValueChange={(value) =>
+                    setForm((s) => ({ ...s, nightOvertimeHoursText: value }))
+                  }
+                  error={getFieldError('اضافه کاری شب', form.nightOvertimeHoursText)}
+                />
+                <NumericInput
+                  id="salary-holiday-overtime"
+                  label="اضافه کاری تعطیل"
+                  value={form.holidayOvertimeHoursText}
+                  onValueChange={(value) =>
+                    setForm((s) => ({ ...s, holidayOvertimeHoursText: value }))
+                  }
+                  error={getFieldError('اضافه کاری تعطیل', form.holidayOvertimeHoursText)}
+                />
+                <NumericInput
+                  id="salary-mission-days"
+                  label="روزهای ماموریت"
+                  value={form.missionDaysText}
+                  onValueChange={(value) => setForm((s) => ({ ...s, missionDaysText: value }))}
+                  error={getFieldError('روزهای ماموریت', form.missionDaysText)}
+                />
+                <NumericInput
+                  id="salary-children"
+                  label="تعداد فرزند"
+                  value={form.numberOfChildrenText}
+                  onValueChange={(value) => setForm((s) => ({ ...s, numberOfChildrenText: value }))}
+                  error={getFieldError('تعداد فرزند', form.numberOfChildrenText)}
+                />
               </div>
 
               <div className="mt-2">
@@ -536,40 +468,22 @@ export default function SalaryPage() {
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
-                      <div className="flex flex-col gap-2">
-                        <label
-                          htmlFor="salary-other-benefits"
-                          className="text-sm font-semibold text-[var(--text-primary)]"
-                        >
-                          سایر مزایا (تومان)
-                        </label>
-                        <input
-                          id="salary-other-benefits"
-                          type="text"
-                          value={form.otherBenefitsText}
-                          onChange={(e) =>
-                            setForm((s) => ({ ...s, otherBenefitsText: e.target.value }))
-                          }
-                          className="input-field"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <label
-                          htmlFor="salary-other-deductions"
-                          className="text-sm font-semibold text-[var(--text-primary)]"
-                        >
-                          سایر کسورات (تومان)
-                        </label>
-                        <input
-                          id="salary-other-deductions"
-                          type="text"
-                          value={form.otherDeductionsText}
-                          onChange={(e) =>
-                            setForm((s) => ({ ...s, otherDeductionsText: e.target.value }))
-                          }
-                          className="input-field"
-                        />
-                      </div>
+                      <MoneyInput
+                        id="salary-other-benefits"
+                        label="سایر مزایا (تومان)"
+                        value={form.otherBenefitsText}
+                        onValueChange={(value) => setForm((s) => ({ ...s, otherBenefitsText: value }))}
+                        error={getFieldError('سایر مزایا', form.otherBenefitsText)}
+                      />
+                      <MoneyInput
+                        id="salary-other-deductions"
+                        label="سایر کسورات (تومان)"
+                        value={form.otherDeductionsText}
+                        onValueChange={(value) =>
+                          setForm((s) => ({ ...s, otherDeductionsText: value }))
+                        }
+                        error={getFieldError('سایر کسورات', form.otherDeductionsText)}
+                      />
                     </div>
                   </div>
                 ) : null}
