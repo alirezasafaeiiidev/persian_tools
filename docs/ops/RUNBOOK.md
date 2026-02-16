@@ -15,6 +15,8 @@
 - nginx: `ops/nginx/persian-tools.conf`
 - systemd: `ops/systemd/persian-tools-production.service`, `ops/systemd/persian-tools-staging.service`
 - deploy scripts: `ops/deploy/deploy.sh`, `ops/deploy/rollback.sh`
+- env files (server): `/var/www/persian-tools/shared/env/production.env` و `/var/www/persian-tools/shared/env/staging.env`
+  - template: `ops/env/production.env.example` و `ops/env/staging.env.example`
 - readiness gates: `docs/deployment-readiness-gates.json` و runner: `scripts/deploy/run-readiness-gates.mjs`
 - RC gates: `docs/release-candidate-checklist.json` و runner: `scripts/release/run-rc-gates.mjs`
 - launch smoke: `docs/launch-day-checklist.json` و runner: `scripts/release/run-launch-smoke.mjs`
@@ -64,6 +66,23 @@
 - nginx access/error logs
 - health endpoint (اگر اضافه شود): `/api/health`
 - گزارش های readiness/rc/launch داخل `docs/**/reports`
+
+## Google Verification (SEO)
+
+1. وارد Google Search Console شوید و property دامنه `persiantoolbox.ir` را اضافه کنید.
+2. روش "HTML tag" را انتخاب کنید و مقدار `content` را بردارید.
+3. در فایل env سرور مقدار `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` را تنظیم کنید.
+4. deploy کنید و در Search Console دکمه Verify را بزنید.
+
+## Analytics Secret (Production-safe)
+
+برای اینکه analytics در production هم کار کند و secret سمت مرورگر لو نرود:
+
+1. در env سرور مقدارهای زیر را تنظیم کنید:
+   - `NEXT_PUBLIC_ANALYTICS_ID` (یک شناسه عمومی)
+   - `ANALYTICS_INGEST_SECRET` (یک secret تصادفی و محرمانه)
+2. در nginx برای مسیر `/api/analytics` هدر `x-pt-analytics-secret` را به upstream تزریق کنید.
+   - نمونه در `ops/nginx/persian-tools.conf` اضافه می‌شود (placeholder را با secret واقعی پر کنید).
 
 ## چک لیست قبل از production
 
