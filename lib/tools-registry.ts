@@ -26,6 +26,8 @@ export type CategoryContent = {
   keywords?: string[];
 };
 
+export type ToolTier = 'Offline-Guaranteed' | 'Hybrid' | 'Online-Required';
+
 export type ToolEntry = {
   id: string;
   path: string;
@@ -37,6 +39,11 @@ export type ToolEntry = {
   kind: 'tool' | 'category' | 'hub';
   category?: ToolCategory;
   content?: ToolContent;
+  tier: ToolTier;
+};
+
+type RawToolEntry = Omit<ToolEntry, 'tier'> & {
+  tier?: ToolTier;
 };
 
 const categories: Record<string, ToolCategory> = {
@@ -230,7 +237,7 @@ const categoryContent: Record<string, CategoryContent> = {
   },
 };
 
-export const toolsRegistry: ToolEntry[] = [
+const rawToolsRegistry: RawToolEntry[] = [
   {
     id: 'tools-dashboard',
     path: '/tools',
@@ -1083,6 +1090,31 @@ export const toolsRegistry: ToolEntry[] = [
   },
 ];
 
+const ONLINE_REQUIRED_PREFIXES = ['/pro/'] as const;
+const ONLINE_REQUIRED_PATHS = new Set(['/pro']);
+const HYBRID_PATHS = new Set<string>([]);
+
+function resolveToolTier(entry: RawToolEntry): ToolTier {
+  if (entry.tier) {
+    return entry.tier;
+  }
+  if (ONLINE_REQUIRED_PATHS.has(entry.path)) {
+    return 'Online-Required';
+  }
+  if (ONLINE_REQUIRED_PREFIXES.some((prefix) => entry.path.startsWith(prefix))) {
+    return 'Online-Required';
+  }
+  if (HYBRID_PATHS.has(entry.path)) {
+    return 'Hybrid';
+  }
+  return 'Offline-Guaranteed';
+}
+
+export const toolsRegistry: ToolEntry[] = rawToolsRegistry.map((entry) => ({
+  ...entry,
+  tier: resolveToolTier(entry),
+}));
+
 const toolsByPath = new Map(toolsRegistry.map((tool) => [tool.path, tool]));
 
 export function getToolByPath(path: string): ToolEntry | undefined {
@@ -1111,4 +1143,17 @@ export function getToolsByCategory(categoryId: string): ToolEntry[] {
 
 export function getCategoryContent(categoryId: string): CategoryContent | undefined {
   return categoryContent[categoryId];
+}
+
+export function getTierByPath(path: string): ToolTier {
+  if (ONLINE_REQUIRED_PATHS.has(path)) {
+    return 'Online-Required';
+  }
+  if (ONLINE_REQUIRED_PREFIXES.some((prefix) => path.startsWith(prefix))) {
+    return 'Online-Required';
+  }
+  if (HYBRID_PATHS.has(path)) {
+    return 'Hybrid';
+  }
+  return toolsByPath.get(path)?.tier ?? 'Offline-Guaranteed';
 }
