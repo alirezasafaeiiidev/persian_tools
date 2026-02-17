@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
 import {
   DEFAULT_SITE_SETTINGS,
   SITE_SETTINGS_ENV_KEYS,
@@ -18,11 +18,21 @@ type SiteSettingRow = {
 };
 
 type SiteSettingMap = Partial<Record<keyof PublicSiteSettings, string | null>>;
+type SqlStatement = {
+  all: (...args: string[]) => SiteSettingRow[];
+  run: (key: string, value: string | null, updatedAt: number) => void;
+};
+
+type SqliteDb = {
+  exec: (sql: string) => void;
+  prepare: (sql: string) => SqlStatement;
+};
 
 const SQLITE_ENV_KEY = 'SITE_SETTINGS_SQLITE_PATH';
 const SQLITE_DEFAULT_PATH = '.data/site-settings.sqlite';
 
-let sqliteDb: DatabaseSync | null = null;
+const require = createRequire(import.meta.url);
+let sqliteDb: SqliteDb | null = null;
 
 export class SiteSettingsStorageUnavailableError extends Error {
   constructor() {
@@ -42,15 +52,28 @@ function ensureSqliteDirectory(path: string): void {
   }
 }
 
-function getSqliteDb(): DatabaseSync {
+function loadDatabaseSync(): ((path: string) => SqliteDb) | null {
+  try {
+    const sqliteModule = require('node:sqlite') as { DatabaseSync: new (path: string) => SqliteDb };
+    return (path: string) => new sqliteModule.DatabaseSync(path);
+  } catch {
+    return null;
+  }
+}
+
+function getSqliteDb(): SqliteDb {
   if (sqliteDb) {
     return sqliteDb;
   }
 
   try {
+    const createDb = loadDatabaseSync();
+    if (!createDb) {
+      throw new SiteSettingsStorageUnavailableError();
+    }
     const sqlitePath = resolveSqlitePath();
     ensureSqliteDirectory(sqlitePath);
-    const db = new DatabaseSync(sqlitePath);
+    const db = createDb(sqlitePath);
     db.exec(`
       CREATE TABLE IF NOT EXISTS site_settings (
         key TEXT PRIMARY KEY,
