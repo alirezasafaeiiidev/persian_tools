@@ -56,7 +56,7 @@ Each task spec lives in `tasks-next/<ID>.md`.
 
 ### NP0
 
-- `NP0-01` Production-grade analytics storage (no single JSON file)
+- `NP0-01` Production-grade analytics storage (no single JSON file) — DONE
 - `NP0-02` Deploy-blocking gate: P0 done + lint/test/build + Lighthouse + security audit
 - `NP0-03` Feature availability framework (flags + consistent disabled UX/API)
 - `NP0-04` Restore monetization surfaces coherently (support/ads/plans/account)
