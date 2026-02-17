@@ -5,6 +5,7 @@ import {
   type AnalyticsEvent,
 } from '@/lib/analyticsStore';
 import { requireAdminFromRequest } from '@/lib/server/adminAuth';
+import { makeRateLimitKey, rateLimit } from '@/lib/server/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,6 +16,7 @@ type AnalyticsPayload = {
 };
 
 const MAX_EVENTS_PER_REQUEST = 200;
+const MAX_BODY_BYTES = Number(process.env['ANALYTICS_MAX_BODY_BYTES'] ?? '262144'); // 256KiB
 
 function isProduction(): boolean {
   return process.env['NODE_ENV'] === 'production';
@@ -31,6 +33,33 @@ function getIngestSecret(): string {
 
 function analyticsFeatureEnabled(): boolean {
   return Boolean(process.env['NEXT_PUBLIC_ANALYTICS_ID']);
+}
+
+async function enforceRateLimitIfAvailable(request: Request): Promise<NextResponse | null> {
+  if (!process.env['DATABASE_URL']?.trim()) {
+    return null;
+  }
+
+  const limit = Number(process.env['ANALYTICS_RATE_LIMIT'] ?? '120');
+  const windowMs = Number(process.env['ANALYTICS_RATE_WINDOW_MS'] ?? '60000');
+  if (!Number.isFinite(limit) || limit <= 0 || !Number.isFinite(windowMs) || windowMs <= 0) {
+    return null;
+  }
+
+  try {
+    const key = makeRateLimitKey('analytics_ingest', request);
+    const result = await rateLimit(key, { limit, windowMs });
+    if (!result.allowed) {
+      return NextResponse.json(
+        { ok: false, reason: 'RATE_LIMITED', resetAt: result.resetAt },
+        { status: 429 },
+      );
+    }
+    return null;
+  } catch {
+    // If rate limiting fails (DB unavailable), do not block ingestion.
+    return null;
+  }
 }
 
 function validateAnalyticsSecurity(request: Request): NextResponse | null {
@@ -65,9 +94,18 @@ export async function POST(request: Request) {
     return securityError;
   }
 
+  const rateLimitError = await enforceRateLimitIfAvailable(request);
+  if (rateLimitError) {
+    return rateLimitError;
+  }
+
   let payload: AnalyticsPayload;
   try {
-    payload = (await request.json()) as AnalyticsPayload;
+    const raw = await request.text();
+    if (raw.length > MAX_BODY_BYTES) {
+      return NextResponse.json({ ok: false, reason: 'PAYLOAD_TOO_LARGE' }, { status: 413 });
+    }
+    payload = JSON.parse(raw) as AnalyticsPayload;
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
@@ -101,9 +139,14 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const adminCheck = await requireAdminFromRequest(request);
-  if (!adminCheck.ok) {
-    return NextResponse.json({ ok: false }, { status: adminCheck.status });
+  try {
+    const adminCheck = await requireAdminFromRequest(request);
+    if (!adminCheck.ok) {
+      return NextResponse.json({ ok: false }, { status: adminCheck.status });
+    }
+  } catch {
+    // Admin auth depends on sessions/DB. If not configured, surface a stable error instead of 500.
+    return NextResponse.json({ ok: false, reason: 'ADMIN_AUTH_UNAVAILABLE' }, { status: 503 });
   }
 
   const securityError = validateAnalyticsSecurity(request);
