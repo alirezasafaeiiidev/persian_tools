@@ -40,6 +40,7 @@
     "release": "semantic-release",
     "generate:og": "node scripts/generate-og-images.mjs",
     "gate:local-first": "tsx scripts/quality/verify-local-first.ts",
+    "gate:deploy": "node scripts/quality/verify-np0-tasks.mjs",
     "security:scan": "pnpm audit --prod --audit-level=high && pnpm audit --dev --audit-level=high",
     "db:migrate": "node scripts/db/migrate.mjs",
     "deploy:readiness:validate": "node scripts/deploy/validate-readiness-gates.mjs",
