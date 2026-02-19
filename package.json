@@ -37,6 +37,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "docs:api": "typedoc",
+    "docs:auto": "node scripts/docs/sync-docs.mjs",
+    "docs:auto:check": "node scripts/docs/sync-docs.mjs --check",
     "release": "semantic-release",
     "generate:og": "node scripts/generate-og-images.mjs",
     "gate:local-first": "tsx scripts/quality/verify-local-first.ts",
@@ -65,7 +67,13 @@
     "monetization:close:all": "node scripts/monetization/run-close-all.mjs",
     "licensing:consistency": "node scripts/licensing/validate-license-consistency.mjs",
     "licensing:validate": "node scripts/licensing/validate-license-assets.mjs && node scripts/licensing/validate-license-consistency.mjs",
-    "licensing:release:dry-run": "node scripts/licensing/run-v2-release-prep-dry-run.mjs"
+    "licensing:release:dry-run": "node scripts/licensing/run-v2-release-prep-dry-run.mjs",
+    "roadmap:next": "node scripts/roadmap/next-task.mjs --format table",
+    "roadmap:phase0": "node scripts/roadmap/execute.mjs --phase phase0-verify",
+    "roadmap:np0": "node scripts/roadmap/execute.mjs --phase np0",
+    "roadmap:vps": "node scripts/roadmap/execute.mjs --phase vps-check",
+    "roadmap:run": "node scripts/roadmap/execute.mjs --phase full",
+    "roadmap:dry": "node scripts/roadmap/execute.mjs --phase full --dry-run"
   },
   "codex": {
     "mcp-start": "bash scripts/mcp-start.sh"
