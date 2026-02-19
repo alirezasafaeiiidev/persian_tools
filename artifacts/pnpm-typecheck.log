@@ -1,0 +1,4 @@
+
+> persiantoolbox@2.0.2 typecheck /workspace/asdev-persiantoolbox
+> tsc --noEmit
+
