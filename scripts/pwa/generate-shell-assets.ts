@@ -54,20 +54,24 @@ function renderJson(assets: string[]): string {
   )}\n`;
 }
 
-function renderSwArrayBlock(assets: string[]): string {
-  const lines = assets.map((asset) => `  '${asset}',`);
-  return ['/* GENERATED_SHELL_ASSETS_START */', ...lines, '/* GENERATED_SHELL_ASSETS_END */'].join(
-    '\n',
-  );
+function renderSwArrayBlock(assets: string[], indent: string): string {
+  const lines = assets.map((asset) => `${indent}'${asset}',`);
+  return [
+    `${indent}/* GENERATED_SHELL_ASSETS_START */`,
+    ...lines,
+    `${indent}/* GENERATED_SHELL_ASSETS_END */`,
+  ].join('\n');
 }
 
 function updateSwSource(source: string, assets: string[]): string {
   const blockPattern =
-    /\/\* GENERATED_SHELL_ASSETS_START \*\/[\s\S]*?\/\* GENERATED_SHELL_ASSETS_END \*\//m;
-  const block = renderSwArrayBlock(assets);
-  if (!blockPattern.test(source)) {
+    /(^[ \t]*)\/\* GENERATED_SHELL_ASSETS_START \*\/[\s\S]*?^[ \t]*\/\* GENERATED_SHELL_ASSETS_END \*\//m;
+  const match = source.match(blockPattern);
+  if (!match) {
     throw new Error('SW generated block markers not found in public/sw.js');
   }
+  const indent = match[1] ?? '';
+  const block = renderSwArrayBlock(assets, indent);
   return source.replace(blockPattern, block);
 }
 

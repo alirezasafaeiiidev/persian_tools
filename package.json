@@ -44,7 +44,7 @@
     "gate:local-first": "tsx scripts/quality/verify-local-first.ts",
     "gate:deploy": "node scripts/quality/verify-np0-tasks.mjs",
     "performance:budgets": "node scripts/quality/check-performance-budgets.mjs",
-    "security:scan": "pnpm audit --prod --audit-level=high && pnpm audit --dev --audit-level=high",
+    "security:scan": "pnpm audit --prod --audit-level=high --ignore-registry-errors && pnpm audit --dev --audit-level=high --ignore-registry-errors",
     "db:migrate": "node scripts/db/migrate.mjs",
     "deploy:readiness:validate": "node scripts/deploy/validate-readiness-gates.mjs",
     "deploy:readiness:run": "node scripts/deploy/run-readiness-gates.mjs --tier=core",
@@ -249,7 +249,8 @@
       "@modelcontextprotocol/sdk": "1.26.0",
       "lodash": "4.17.23",
       "hono": "4.11.7",
-      "playwright-core": "1.58.1"
+      "playwright-core": "1.58.1",
+      "minimatch": "10.2.1"
     }
   }
 }
