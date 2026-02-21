@@ -1,4 +1,3 @@
-import Script from 'next/script';
 import { buildToolJsonLd } from '@/lib/seo-tools';
 import { getCspNonce } from '@/lib/csp';
 import type { ToolEntry } from '@/lib/tools-registry';
@@ -18,10 +17,9 @@ export default async function ToolSeoContent({ tool }: Props) {
 
   return (
     <section className="mt-12 space-y-10">
-      <Script
+      <script
         id={`tool-json-ld-${tool.id}`}
         type="application/ld+json"
-        strategy="afterInteractive"
         nonce={nonce ?? undefined}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />

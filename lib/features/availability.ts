@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { buildMetadata } from '@/lib/seo';
 
 export type FeatureId =
   | 'support'
@@ -186,9 +187,23 @@ export function isFeatureEnabled(id: FeatureId): boolean {
 
 export function featurePageMetadata(id: FeatureId, overrides: Partial<Metadata> = {}): Metadata {
   const info = getFeatureInfo(id);
+  const title = overrides.title ?? info.title;
+  const description = overrides.description ?? info.disabledMessage;
+  let baseMetadata: Metadata = {
+    title,
+    description,
+  };
+
+  if (info.path !== undefined) {
+    baseMetadata = buildMetadata({
+      title: typeof title === 'string' ? title : info.title,
+      description,
+      path: info.path,
+    });
+  }
+
   return {
-    title: overrides.title ?? info.title,
-    description: overrides.description,
+    ...baseMetadata,
     robots: info.enabled ? info.robots?.enabled : info.robots?.disabled,
     ...overrides,
   };

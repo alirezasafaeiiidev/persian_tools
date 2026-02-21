@@ -1,7 +1,6 @@
 import Container from '@/components/ui/Container';
 import Navigation from '@/components/ui/Navigation';
 import Footer from '@/components/ui/Footer';
-import Script from 'next/script';
 import { buildMetadata } from '@/lib/seo';
 import { buildPillarJsonLd } from '@/lib/seo-tools';
 import { getCategories, getCategoryContent, getToolsByCategory } from '@/lib/tools-registry';
@@ -10,17 +9,18 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 type Props = {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
-  const category = getCategories().find((item) => item.id === params.category);
+  const { category: categoryParam } = await params;
+  const category = getCategories().find((item) => item.id === categoryParam);
   const content = category ? getCategoryContent(category.id) : undefined;
   if (!category) {
     return buildMetadata({
       title: 'موضوع یافت نشد - جعبه ابزار فارسی',
       description: 'موضوع مورد نظر یافت نشد.',
-      path: `/topics/${params.category}`,
+      path: `/topics/${categoryParam}`,
     });
   }
 
@@ -33,7 +33,8 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function TopicCategoryPage({ params }: Props) {
-  const category = getCategories().find((item) => item.id === params.category);
+  const { category: categoryParam } = await params;
+  const category = getCategories().find((item) => item.id === categoryParam);
   if (!category) {
     notFound();
   }
@@ -61,12 +62,11 @@ export default async function TopicCategoryPage({ params }: Props) {
     <div className="min-h-dvh flex flex-col page-shell">
       <Navigation />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Container className="py-10 space-y-10">
-          <Script
+          <script
             id={`topics-${category.id}-json-ld`}
             type="application/ld+json"
-            strategy="afterInteractive"
             nonce={nonce ?? undefined}
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />

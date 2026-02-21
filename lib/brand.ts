@@ -4,12 +4,14 @@ export const BRAND = {
   baseUrl: 'https://persiantoolbox.ir',
   masterBrand: 'ASDEV',
   ownerName: 'علیرضا صفایی',
-  ownerSiteUrl: 'https://alirezasafaeidev.ir',
+  ownerSiteUrl: 'https://alirezasafaeisystems.ir/',
   repository: {
-    owner: 'alirezasafaeiiidev',
-    name: 'persiantoolbox',
+    owner: 'alirezasafaeisystems',
+    name: 'asdev-persiantoolbox',
   },
 } as const;
+
+export const BRAND_REPOSITORY_URL = `https://github.com/${BRAND.repository.owner}/${BRAND.repository.name}`;
 
 export function getDefaultSiteUrl(): string {
   const envSiteUrl = process.env['NEXT_PUBLIC_SITE_URL']?.trim();

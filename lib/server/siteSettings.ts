@@ -1,6 +1,5 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
 import {
   DEFAULT_SITE_SETTINGS,
   SITE_SETTINGS_ENV_KEYS,
@@ -18,11 +17,19 @@ type SiteSettingRow = {
 };
 
 type SiteSettingMap = Partial<Record<keyof PublicSiteSettings, string | null>>;
+type SqliteStatement = {
+  all: (...args: unknown[]) => unknown[];
+  run: (...args: unknown[]) => unknown;
+};
+type SqliteDb = {
+  exec: (sql: string) => void;
+  prepare: (sql: string) => SqliteStatement;
+};
 
 const SQLITE_ENV_KEY = 'SITE_SETTINGS_SQLITE_PATH';
 const SQLITE_DEFAULT_PATH = '.data/site-settings.sqlite';
 
-let sqliteDb: DatabaseSync | null = null;
+let sqliteDb: SqliteDb | null = null;
 
 export class SiteSettingsStorageUnavailableError extends Error {
   constructor() {
@@ -42,15 +49,18 @@ function ensureSqliteDirectory(path: string): void {
   }
 }
 
-function getSqliteDb(): DatabaseSync {
+async function getSqliteDb(): Promise<SqliteDb> {
   if (sqliteDb) {
     return sqliteDb;
   }
 
   try {
+    const sqliteModule = (await import('node:sqlite')) as unknown as {
+      DatabaseSync: new (path: string) => SqliteDb;
+    };
     const sqlitePath = resolveSqlitePath();
     ensureSqliteDirectory(sqlitePath);
-    const db = new DatabaseSync(sqlitePath);
+    const db = new sqliteModule.DatabaseSync(sqlitePath);
     db.exec(`
       CREATE TABLE IF NOT EXISTS site_settings (
         key TEXT PRIMARY KEY,
@@ -95,7 +105,7 @@ function mapDbRowToField(key: string, value: string | null, target: SiteSettingM
 
 async function readSqliteSettings(): Promise<SiteSettingMap> {
   try {
-    const db = getSqliteDb();
+    const db = await getSqliteDb();
     const keys = Object.values(SITE_SETTINGS_KEYS);
     const placeholders = keys.map(() => '?').join(', ');
     const statement = db.prepare(
@@ -171,7 +181,7 @@ export async function updateSiteSettings(patch: SiteSettingsPatch): Promise<Publ
   }
 
   try {
-    const db = getSqliteDb();
+    const db = await getSqliteDb();
     const now = Date.now();
     const statement = db.prepare(
       `INSERT INTO site_settings (key, value, updated_at)

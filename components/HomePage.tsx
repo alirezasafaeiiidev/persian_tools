@@ -1,4 +1,3 @@
-import Script from 'next/script';
 import Link from 'next/link';
 import ButtonLink from '@/shared/ui/ButtonLink';
 import ToolCard from '@/shared/ui/ToolCard';
@@ -113,10 +112,9 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-12">
-      <Script
+      <script
         id="home-json-ld"
         type="application/ld+json"
-        strategy="afterInteractive"
         nonce={nonce ?? undefined}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
       />

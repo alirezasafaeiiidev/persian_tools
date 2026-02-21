@@ -1,7 +1,6 @@
 import Container from '@/components/ui/Container';
 import Navigation from '@/components/ui/Navigation';
 import Footer from '@/components/ui/Footer';
-import Script from 'next/script';
 import { buildMetadata } from '@/lib/seo';
 import { buildTopicJsonLd } from '@/lib/seo-tools';
 import { getCategories, getCategoryContent, getToolsByCategory } from '@/lib/tools-registry';
@@ -61,12 +60,11 @@ export default async function TopicsPage() {
     <div className="min-h-dvh flex flex-col page-shell">
       <Navigation />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Container className="py-10 space-y-10">
-          <Script
+          <script
             id="topics-json-ld"
             type="application/ld+json"
-            strategy="afterInteractive"
             nonce={nonce ?? undefined}
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />

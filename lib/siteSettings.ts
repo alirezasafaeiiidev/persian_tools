@@ -27,10 +27,10 @@ export const SITE_SETTINGS_ENV_KEYS = {
 } as const;
 
 export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
-  developerName: 'تیم جعبه ابزار فارسی',
-  developerBrandText: 'طراحی و نگهداری این سرویس توسط تیم جعبه ابزار فارسی انجام می‌شود.',
-  orderUrl: null,
-  portfolioUrl: null,
+  developerName: 'Alireza Safaei (ASDEV)',
+  developerBrandText: 'ساخته شده توسط Alireza Safaei (ASDEV)',
+  orderUrl: 'https://github.com/alirezasafaeisystems/asdev-persiantoolbox',
+  portfolioUrl: 'https://alirezasafaeisystems.ir/',
 };
 
 export function normalizeText(

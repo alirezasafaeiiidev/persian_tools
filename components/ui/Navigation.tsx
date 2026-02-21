@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 import Container from '@/shared/ui/Container';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import {
   IconPdf,
   IconImage,
@@ -35,7 +36,10 @@ const v3NavItems = [
 const navItems = isV3NavEnabled ? v3NavItems : v2NavItems;
 
 export default function Navigation() {
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const safePathname = pathname ?? '';
+  const isActive = (href: string) => safePathname === href || safePathname.startsWith(`${href}/`);
 
   return (
     <header
@@ -58,7 +62,12 @@ export default function Navigation() {
             <Link
               key={item.label}
               href={item.href}
-              className="flex items-center gap-2 rounded-full border border-transparent px-4 py-2.5 text-sm font-bold text-[var(--text-primary)] transition-all duration-[var(--motion-fast)] hover:border-[var(--border-light)] hover:bg-[var(--surface-2)]"
+              aria-current={isActive(item.href) ? 'page' : undefined}
+              className={`flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-bold transition-all duration-[var(--motion-fast)] ${
+                isActive(item.href)
+                  ? 'border-[var(--color-primary)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-primary)]'
+                  : 'border-transparent text-[var(--text-primary)] hover:border-[var(--border-light)] hover:bg-[var(--surface-2)]'
+              }`}
             >
               <item.icon className="h-4 w-4" />
               {item.label}
@@ -67,83 +76,65 @@ export default function Navigation() {
         </nav>
 
         <div className="hidden lg:flex items-center">
+          <ThemeToggle />
+        </div>
+
+        <div className="hidden lg:flex items-center">
           <Link href="/tools" className="btn btn-primary btn-md px-5">
             <IconChevronDown className="h-4 w-4 rotate-90" />
             همه ابزارها
           </Link>
         </div>
 
-        <motion.button
+        <button
           data-testid="mobile-menu"
           aria-label={isMobileMenuOpen ? 'بستن منوی ناوبری' : 'باز کردن منوی ناوبری'}
           aria-expanded={isMobileMenuOpen}
           aria-controls="mobile-menu-panel"
           className="lg:hidden flex items-center gap-2 rounded-full p-2.5 text-[var(--text-primary)] transition-all duration-[var(--motion-fast)] hover:bg-[var(--surface-2)]"
           onClick={() => setIsMobileMenuOpen((value) => !value)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
         >
-          <AnimatePresence mode="wait">
-            {isMobileMenuOpen ? (
-              <motion.div
-                key="close"
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <IconX className="h-6 w-6" />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="menu"
-                initial={{ rotate: 90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: -90, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <IconMenu className="h-6 w-6" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
+          {isMobileMenuOpen ? <IconX className="h-6 w-6" /> : <IconMenu className="h-6 w-6" />}
+        </button>
       </Container>
 
-      <AnimatePresence>
-        {isMobileMenuOpen ? (
-          <motion.div
-            id="mobile-menu-panel"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="lg:hidden border-t border-[var(--border-light)] bg-[var(--surface-1)]/95 backdrop-blur-xl"
-          >
-            <Container className="space-y-2 py-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition-all duration-[var(--motion-fast)] hover:bg-[var(--surface-2)]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              ))}
-              <div className="pt-1">
-                <Link
-                  href="/tools"
-                  className="btn btn-primary btn-md w-full justify-center"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  همه ابزارها
-                </Link>
-              </div>
-            </Container>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <div
+        id="mobile-menu-panel"
+        className={`lg:hidden border-t border-[var(--border-light)] bg-[var(--surface-1)]/95 backdrop-blur-xl transition-all duration-[var(--motion-fast)] ${
+          isMobileMenuOpen ? 'max-h-[32rem] opacity-100' : 'max-h-0 overflow-hidden opacity-0'
+        }`}
+      >
+        <Container className="space-y-2 py-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+              className={`flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold transition-all duration-[var(--motion-fast)] ${
+                isActive(item.href)
+                  ? 'bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-primary)]'
+                  : 'text-[var(--text-primary)] hover:bg-[var(--surface-2)]'
+              }`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          ))}
+          <div className="pt-1">
+            <div className="mb-2">
+              <ThemeToggle />
+            </div>
+            <Link
+              href="/tools"
+              className="btn btn-primary btn-md w-full justify-center"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              همه ابزارها
+            </Link>
+          </div>
+        </Container>
+      </div>
     </header>
   );
 }

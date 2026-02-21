@@ -1,14 +1,11 @@
 /* Licensing note: repository is MIT through v1.1.x; planned dual-license policy starts from v2.0.0 (docs/licensing/dual-license-policy.md). */
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import Script from 'next/script';
 import { defaultOgImage, siteDescription, siteName, siteUrl } from '@/lib/seo';
 import { BRAND } from '@/lib/brand';
-import MotionProvider from '@/components/ui/MotionProvider';
-import ServiceWorkerRegistration from '@/components/ui/ServiceWorkerRegistration';
-import UsageTracker from '@/components/ui/UsageTracker';
 import ToastProvider from '@/shared/ui/ToastProvider';
 import { getCspNonce } from '@/lib/csp';
+import DeferredRuntimeClients from '@/components/ui/DeferredRuntimeClients';
 import './globals.css';
 
 const googleVerification = process.env['NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION'];
@@ -141,6 +138,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="fa" dir="rtl">
       <head>
+        <script
+          id="theme-init"
+          nonce={nonce ?? undefined}
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var key='persiantoolbox.theme';var stored=localStorage.getItem(key);var theme=stored==='dark'?'dark':'light';document.documentElement.dataset.theme=theme;}catch(e){document.documentElement.dataset.theme='light';}})();",
+          }}
+        />
         <link
           rel="preload"
           as="font"
@@ -155,10 +160,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           href="/fonts/fonnts.com-IRANSansXBold.woff2"
           crossOrigin="anonymous"
         />
-        <Script
+        <script
           id="root-structured-data"
           type="application/ld+json"
-          strategy="afterInteractive"
           nonce={nonce ?? undefined}
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(structuredData),
@@ -166,13 +170,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-[var(--bg-primary)]">
-        <MotionProvider>
-          <ToastProvider>
-            <ServiceWorkerRegistration />
-            <UsageTracker />
-            {children}
-          </ToastProvider>
-        </MotionProvider>
+        <a href="#main-content" className="skip-link">
+          رفتن به محتوای اصلی
+        </a>
+        <ToastProvider>
+          <DeferredRuntimeClients />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

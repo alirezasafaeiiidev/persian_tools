@@ -45,9 +45,20 @@ describe('feature availability', () => {
   it('returns noindex robots when disabled', () => {
     const meta = featurePageMetadata('plans');
     expect(meta.robots).toMatchObject({ index: false, follow: false });
+    expect(meta.alternates?.canonical).toBeDefined();
+    expect(meta.openGraph?.url).toBeDefined();
 
     process.env['FEATURE_PLANS_ENABLED'] = '1';
     const enabledMeta = featurePageMetadata('plans');
     expect(enabledMeta.robots).toBeUndefined();
+  });
+
+  it('keeps canonical path for feature pages with explicit path', () => {
+    const meta = featurePageMetadata('support', {
+      title: 'حمایت از PersianToolbox',
+    });
+
+    expect(meta.alternates?.canonical).toContain('/support');
+    expect(meta.openGraph?.url).toContain('/support');
   });
 });

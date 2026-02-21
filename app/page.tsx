@@ -16,7 +16,7 @@ export default function RootPage() {
     <div className="min-h-dvh flex flex-col page-shell">
       <Navigation />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Container className="py-10">
           <HomePage />
         </Container>

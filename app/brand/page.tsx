@@ -15,7 +15,7 @@ export default function BrandRoute() {
   return (
     <div className="min-h-dvh flex flex-col page-shell">
       <Navigation />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Container className="py-10 space-y-8">
           <header className="space-y-3">
             <h1 className="text-3xl font-black text-[var(--text-primary)]">

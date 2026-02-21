@@ -86,9 +86,29 @@ export default function ServiceWorkerRegistration() {
 
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
 
-    register();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let idleId: number | null = null;
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const startRegistration = () => {
+      void register();
+    };
+
+    if (typeof idleWindow.requestIdleCallback === 'function') {
+      idleId = idleWindow.requestIdleCallback(startRegistration, { timeout: 2000 });
+    } else {
+      timeoutId = setTimeout(startRegistration, 250);
+    }
 
     return () => {
+      if (idleId !== null && typeof idleWindow.cancelIdleCallback === 'function') {
+        idleWindow.cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
       navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
       navigator.serviceWorker.removeEventListener('message', listenForMessages);

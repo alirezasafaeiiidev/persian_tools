@@ -9,7 +9,7 @@ export default function ToolsLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh flex flex-col page-shell">
       <Navigation />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Container className="py-10">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <Breadcrumbs />

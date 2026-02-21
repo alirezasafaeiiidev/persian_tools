@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <div className="min-h-dvh flex flex-col page-shell">
       <Navigation />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Container className="py-16 space-y-12">
           <section className="section-surface p-10 text-center">
             <div className="text-6xl font-black text-[var(--text-primary)]">۴۰۴</div>

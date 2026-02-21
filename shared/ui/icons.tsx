@@ -242,3 +242,41 @@ export function IconHeart(props: IconProps) {
     </svg>
   );
 }
+
+export function IconSun(props: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={props.className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M12 4V2M12 22v-2M4 12H2m20 0h-2M6.34 6.34 4.93 4.93m14.14 14.14-1.41-1.41M17.66 6.34l1.41-1.41M6.34 17.66l-1.41 1.41"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+export function IconMoon(props: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={props.className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M21 12.79A9 9 0 1 1 11.21 3c-.11.35-.17.72-.17 1.1a7 7 0 0 0 8.86 6.69c.36-.1.73-.16 1.1-.2z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
